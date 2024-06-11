@@ -15,12 +15,11 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f'Using device: {device}')
 
 # Load dataset
-# en-2020-01-merged-cleaned-without-emoji-glove.tsv
-# data = pd.read_csv('../dataset/process/en-2020-01-merged-cleaned-without-emoji.tsv', sep='\t')
-data = pd.read_csv('../dataset/process/en-2020-01-merged-cleaned-without-emoji-glove.tsv', sep='\t')
+data = pd.read_csv('../dataset/process/tweets_cleaned_emoticons_emojis_convert_cleaned.tsv', sep='\t')
 data = data.dropna()
 
 X = data['text'].values
+# X = data['reduced_clean_text'].values
 y = data['sentiment'].values
 
 # Split data into train, validation, and test sets (70%, 15%, 15%)
@@ -77,7 +76,7 @@ val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
 test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
 # Load BERT model
-model = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=2)
+model = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=3)
 model = model.to(device)
 
 # Define optimizer and scheduler
@@ -145,7 +144,7 @@ def eval_model(model, data_loader, loss_fn, device, n_examples):
 
     return correct_predictions.double() / n_examples, losses / n_examples
 
-EPOCHS = 4
+EPOCHS = 10
 
 for epoch in range(EPOCHS):
     print(f'Epoch {epoch + 1}/{EPOCHS}')
@@ -208,7 +207,7 @@ print('Accuracy:', accuracy_score(y_true, y_pred))
 print('Confusion Matrix:')
 print(confusion_matrix(y_true, y_pred))
 print('Classification Report:')
-print(classification_report(y_true, y_pred))
+print(classification_report(y_true, y_pred, target_names=['negative', 'neutral', 'positive']))
 
 def plot_confusion_matrix(y_true, y_pred):
     cm = confusion_matrix(y_true, y_pred)
@@ -217,8 +216,8 @@ def plot_confusion_matrix(y_true, y_pred):
     ax.set_xlabel('Predicted labels')
     ax.set_ylabel('True labels')
     ax.set_title('Confusion Matrix')
-    ax.xaxis.set_ticklabels(['negative', 'positive'])
-    ax.yaxis.set_ticklabels(['negative', 'positive'])
+    ax.xaxis.set_ticklabels(['negative', 'neutral', 'positive'])
+    ax.yaxis.set_ticklabels(['negative', 'neutral', 'positive'])
 
 plot_confusion_matrix(y_true, y_pred)
 plt.show()
